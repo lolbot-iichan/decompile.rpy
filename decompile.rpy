@@ -1,5 +1,7 @@
-# RenPy code decompiler 1.0
+# RenPy code decompiler 1.1
 # Decompiles PRYC files from RenPy runtime. Not for a faint of heart.
+
+# 1.1: Update to support renpy 6.15.x Translate/EndTranslate constructs
 
 # ========
 # CONTACTS
@@ -62,7 +64,7 @@
 # False -> decompile python blocks from source code (better, but you need to patch "renpy/script.py")
 # True  -> decompile python blocks from bytecode (default, no additional actions needed from you)
 python early:
-    __LB_decompile_bytecode = True
+    __LB_decompile_bytecode = False
 
 # =================
 # IT'S NOT ALMIGHTY
@@ -1500,7 +1502,12 @@ init -9001 python:
 #TODO item.interact - True/False
             __LB_add_string(item.filename,item.linenumber,result,tabs)
 
-
+        elif  hasattr(renpy.ast, "Translate") and isinstance(item,renpy.ast.Translate):
+            for it in item.block:
+                __LB_decompile_item(it,tabs)
+        elif  hasattr(renpy.ast, "EndTranslate") and isinstance(item,renpy.ast.EndTranslate):
+            pass
+        
         elif  hasattr(renpy.ast, "UserStatement") and isinstance(item,renpy.ast.UserStatement):
             result = item.line.encode("utf-8")
             __LB_add_string(item.filename,item.linenumber,result,tabs)
