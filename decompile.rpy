@@ -1,8 +1,9 @@
-# RenPy code decompiler 1.1.1
+# RenPy code decompiler 1.1.2
 # Decompiles PRYC files from RenPy runtime. Not for a faint of heart.
 
 # 1.1: Update to support renpy 6.15.x Translate/EndTranslate constructs
 # 1.1.1: Unicode fix
+# 1.1.2: atl & with collision fix, 2+ behinds fix
 
 # ========
 # CONTACTS
@@ -1213,6 +1214,8 @@ init -9001 python:
                 elif  "with " in s:
                     if  "with " in str:
                         pass
+                    elif ":\n" in str:
+                        __LB_decompiled_files[file][line] = (tabs,str.replace(":\n"," "+s+":\n",1))
                     else:
                         __LB_decompiled_files[file][line] = (tabs,str+" "+s)
                 else:
@@ -1470,8 +1473,8 @@ init -9001 python:
                     result += "at " + ", ".join([i.encode("utf-8") for i in at_list]) + " "
                 if  tag != None:
                     result += "as " + tag.encode("utf-8") + " "
-                for i in behind:
-                    result += "behind " + i.encode("utf-8") + " "
+                if  len(behind) > 0:
+                    result += "behind " + (", ".join(behind)).encode("utf-8") + " "
                 if  layer != "master":
                     result += "onlayer " + layer.encode("utf-8") + " "
                 if  zorder != 0 and zorder != None:
