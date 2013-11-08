@@ -1,7 +1,8 @@
-# RenPy code decompiler 1.1
+# RenPy code decompiler 1.1.1
 # Decompiles PRYC files from RenPy runtime. Not for a faint of heart.
 
 # 1.1: Update to support renpy 6.15.x Translate/EndTranslate constructs
+# 1.1.1: Unicode fix
 
 # ========
 # CONTACTS
@@ -1092,7 +1093,7 @@ init -9001 python:
                     expression += item.revolution + " "
                 if  item.circles != "0":
                     expression += "circles " + item.circles
-                lbcode_str += __LB_make_tab(tabs) + expression + "\n"
+                lbcode_str += __LB_make_tab(tabs) + expression.encode("utf-8") + "\n"
             else:
                 result = "#TODO atl "+`item`
 #
