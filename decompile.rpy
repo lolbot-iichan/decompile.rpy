@@ -1,9 +1,10 @@
-# RenPy code decompiler 1.1.2
+# RenPy code decompiler 1.2
 # Decompiles PRYC files from RenPy runtime. Not for a faint of heart.
 
 # 1.1: Update to support renpy 6.15.x Translate/EndTranslate constructs
 # 1.1.1: Unicode fix
 # 1.1.2: atl & with collision fix, 2+ behinds fix
+# 1.2: full atl support
 
 # ========
 # CONTACTS
@@ -1028,13 +1029,18 @@ init -9001 python:
 
 
 
-# =======================================
-# LET'S DECOMPILE SOME MAJOR ATL COMMANDS
-# =======================================
+# =============================
+# LET'S DECOMPILE ATL COMMANDS
+# =============================
 
 
     def __LB_decompile_atl(atl,tabs):
         lbcode_str = ""
+
+#http://www.renpy.org/wiki/renpy/doc/reference/Animation_and_Transformation_Language#Pass_Statement
+        if  len(atl.statements) == 0:
+            lbcode_str += __LB_make_tab(tabs) + "pass" + "\n"
+            
         for item in atl.statements:
 #http://www.renpy.org/wiki/renpy/doc/reference/Animation_and_Transformation_Language#Choice_Statement
             if  hasattr(renpy.atl, "RawChoice") and isinstance(item,renpy.atl.RawChoice):
@@ -1095,6 +1101,30 @@ init -9001 python:
                 if  item.circles != "0":
                     expression += "circles " + item.circles
                 lbcode_str += __LB_make_tab(tabs) + expression.encode("utf-8") + "\n"
+
+#http://www.renpy.org/wiki/renpy/doc/reference/Animation_and_Transformation_Language#Contains_Statement
+            elif hasattr(renpy.atl, "RawContainsExpr") and isinstance(item,renpy.atl.RawContainsExpr):
+                lbcode_str += __LB_make_tab(tabs) + "contains " + item.expression + "\n"
+            elif hasattr(renpy.atl, "RawChild") and isinstance(item,renpy.atl.RawChild):
+                for i in item.children:
+                    lbcode_str += __LB_make_tab(tabs) + "contains:" + "\n"
+                    lbcode_str += __LB_decompile_atl(i,tabs+1)                
+
+#http://www.renpy.org/wiki/renpy/doc/reference/Animation_and_Transformation_Language#Event_Statement
+            elif hasattr(renpy.atl, "RawEvent") and isinstance(item,renpy.atl.RawEvent):
+                lbcode_str += __LB_make_tab(tabs) + "event " + item.name + "\n"
+
+#http://www.renpy.org/wiki/renpy/doc/reference/Animation_and_Transformation_Language#On_Statement
+            elif hasattr(renpy.atl, "RawOn") and isinstance(item,renpy.atl.RawOn):
+                for name, block in item.handlers.iteritems():
+                    lbcode_str += __LB_make_tab(tabs) + "on " + name + ":" + "\n"
+                    lbcode_str += __LB_decompile_atl(block,tabs+1)                
+
+#http://www.renpy.org/wiki/renpy/doc/reference/Animation_and_Transformation_Language#Time_Statement
+            elif hasattr(renpy.atl, "RawTime") and isinstance(item,renpy.atl.RawTime):
+                lbcode_str += __LB_make_tab(tabs) + "time " + item.time + "\n"
+
+
             else:
                 result = "#TODO atl "+`item`
 #
