@@ -129,6 +129,7 @@ python early:
     __LB_condition_debug = False
     __LB_full_debug = False
     __LB_print_dis = False
+    __LB__open = open
 
 # ==================
 # HERE GOES THE CODE
@@ -1577,7 +1578,7 @@ init -9001 python:
             fname_print = fname.replace("/","_").replace("\\","_").replace(":","_")+".txt"
             if  len([1 for matcher in __LB_files_filtered_out if matcher.match(fname_print)]) > 0:
                 continue
-            out = open(fname_print,"wb")
+            out = __LB__open(fname_print,"wb")
             lines = [i for i in __LB_decompiled_files[fname]]
             lines.sort()
             for i in range(1,lines[-1]+1):
