@@ -64,8 +64,8 @@
 # ==============
 # MODE SELECTION
 # ==============
-# False -> decompile python blocks from source code (better, but you need to patch "renpy/script.py")
-# True  -> decompile python blocks from bytecode (default, no additional actions needed from you)
+# False -> decompile python blocks from source code (default, but you need to patch "renpy/script.py")
+# True  -> decompile python blocks from bytecode (less stable, avaliable in case renpy/script.py is changed in future)
 python early:
     __LB_decompile_bytecode = False
 
