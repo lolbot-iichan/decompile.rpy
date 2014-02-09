@@ -51,14 +51,11 @@
 # =============
 # There are two ways of using this script
 #
-# -> SIMPLE WAY TO USE (decompiles python block from bytecode)
-#    Just put this file to your /game/ dir and run the game.
-#
-# -> BETTER WAY TO USE (decompiles python block from source)
+# -> BEST WAY TO USE (decompiles python block from source)
 #    1. Put this file to your /game/ dir.
-#    2. Change "True" to "False" at "__LB_decompile_bytecode = True" line of this file (see "MODE SELECTION" below)
-#    3. Delete "i.source = None" line of "renpy/script.py" file
-#    4. Run the game.
+#    2. Delete "i.source = None" line of "renpy/script.py" file
+#    3. Run the game.
+#
 # Decompiled rpyc will be put at root folder of your game.
 
 # ==============
@@ -163,7 +160,7 @@ init -9001 python:
                 text = text[:-1]
             if  tabs > 0:
                 text = __LB_make_tab(tabs) + text.replace("\n","\n"+__LB_make_tab(tabs))
-            text = text.encode("utf-8")
+            text = text
 
         if  noreturn and text.startswith("return "):
             text = text[7:]
@@ -360,7 +357,7 @@ init -9001 python:
                         id = ord(code.co_code[idx+1]) + ord(code.co_code[idx+2])*256
                         if  isinstance(code.co_consts[id],unicode):
                             code_tmp = code.co_consts[id].replace("\\","\\\\").replace("\n","\\n").replace("\t","\\t").replace("\"","\\\"")
-                            code_tmp = 'u"' + code_tmp.encode("utf-8") + '"'
+                            code_tmp = 'u"' + code_tmp + '"'
                         elif hasattr(code.co_consts[id],"co_code"):
                             code_tmp = code.co_consts[id]
                         else:
@@ -1101,7 +1098,7 @@ init -9001 python:
                     expression += item.revolution + " "
                 if  item.circles != "0":
                     expression += "circles " + item.circles
-                lbcode_str += __LB_make_tab(tabs) + expression.encode("utf-8") + "\n"
+                lbcode_str += __LB_make_tab(tabs) + expression + "\n"
 
 #http://www.renpy.org/wiki/renpy/doc/reference/Animation_and_Transformation_Language#Contains_Statement
             elif hasattr(renpy.atl, "RawContainsExpr") and isinstance(item,renpy.atl.RawContainsExpr):
@@ -1298,10 +1295,10 @@ init -9001 python:
         elif  hasattr(renpy.ast, "If") and isinstance(item,renpy.ast.If):
             entries = [(condition, block) for condition, block in item.entries]
             (condition, block) = entries[0]
-            result = "if "+condition.encode("utf-8")+":"
+            result = "if "+condition+":"
             __LB_add_string(item.filename,item.linenumber,result,tabs)
             for (condition, block) in entries[1:-1]:                
-                result = "elif "+condition.encode("utf-8")+":"
+                result = "elif "+condition+":"
                 linenumber = block[0].linenumber-1
                 __LB_add_string(item.filename,linenumber,result,tabs)
             if len(entries)>1:
@@ -1309,7 +1306,7 @@ init -9001 python:
                 if  condition == "True":
                     result = "else:"
                 else:
-                    result = "elif "+condition.encode("utf-8")+":"
+                    result = "elif "+condition+":"
                 linenumber = block[0].linenumber-1
                 __LB_add_string(item.filename,linenumber,result,tabs)
 
@@ -1396,21 +1393,21 @@ init -9001 python:
         elif  hasattr(renpy.ast, "Menu") and isinstance(item,renpy.ast.Menu):
             result = "menu:"
             if  hasattr(item,"with_") and item.with_ != None:
-                result += "\n" + __LB_make_tab(tabs+1) + "with " + item.with_.encode("utf-8")
+                result += "\n" + __LB_make_tab(tabs+1) + "with " + item.with_
             if  hasattr(item,"set") and item.set != None:
-                result += "\n" + __LB_make_tab(tabs+1) + "set " + item.set.encode("utf-8")
+                result += "\n" + __LB_make_tab(tabs+1) + "set " + item.set
             for (label, condition, block) in item.items:
                 label = label.replace("\\","\\\\").replace("\n","\\n").replace("\t","\\t").replace("\"","\\\"")
                 if  block == None:
-                    result += "\n" + __LB_make_tab(tabs+1) + '"'+label.encode("utf-8")+'"'
+                    result += "\n" + __LB_make_tab(tabs+1) + '"'+label+'"'
             __LB_add_string(item.filename,item.linenumber,result,tabs)
 
             for (label, condition, block) in item.items:
                 label = label.replace("\\","\\\\").replace("\n","\\n").replace("\t","\\t").replace("\"","\\\"")
                 if  block != None:
-                    result = '"'+label.encode("utf-8")+'"'
+                    result = '"'+label+'"'
                     if  condition != "True":
-                        result += " if " + condition.encode("utf-8")
+                        result += " if " + condition
                     result += ":"
                     linenumber = block[0].linenumber-1
                     __LB_add_string(item.filename,linenumber,result,tabs+1)
@@ -1450,7 +1447,7 @@ init -9001 python:
         elif  hasattr(renpy.ast, "Return") and isinstance(item,renpy.ast.Return):
             result = "return"
             if  hasattr(item, "expression") and item.expression:
-                result += " " + item.expression.encode("utf-8")
+                result += " " + item.expression
             __LB_add_string(item.filename,item.linenumber,result,tabs)
 
 #http://www.renpy.org/wiki/renpy/doc/reference/The_Ren'Py_Language#With_Statement
@@ -1469,7 +1466,7 @@ init -9001 python:
 
 #http://www.renpy.org/wiki/renpy/doc/reference/The_Ren'Py_Language#While_Statement
         elif  hasattr(renpy.ast, "While") and isinstance(item,renpy.ast.While):
-            result = "while "+item.condition.encode("utf-8")+":"
+            result = "while "+item.condition+":"
             __LB_add_string(item.filename,item.linenumber,result,tabs)
             for it in item.block:
                 __LB_decompile_item(it,tabs+1)
@@ -1497,19 +1494,19 @@ init -9001 python:
                 elif len(item.imspec) == 7:
                     name, expression, tag, at_list, layer, zorder, behind = item.imspec
                 if  expression == None:
-                    result += " ".join(item.imspec[0]).encode("utf-8") + " "
+                    result += " ".join(item.imspec[0]) + " "
                 else:
-                    result += "expression " + expression.encode("utf-8") + " "
+                    result += "expression " + expression + " "
                 if  len(at_list) > 0:
-                    result += "at " + ", ".join([i.encode("utf-8") for i in at_list]) + " "
+                    result += "at " + ", ".join([i for i in at_list]) + " "
                 if  tag != None:
-                    result += "as " + tag.encode("utf-8") + " "
+                    result += "as " + tag + " "
                 if  len(behind) > 0:
-                    result += "behind " + (", ".join(behind)).encode("utf-8") + " "
+                    result += "behind " + (", ".join(behind)) + " "
                 if  layer != "master":
-                    result += "onlayer " + layer.encode("utf-8") + " "
+                    result += "onlayer " + layer + " "
                 if  zorder != 0 and zorder != None:
-                    result += "zorder " + zorder.encode("utf-8") + " "
+                    result += "zorder " + zorder + " "
                 if  hasattr(item,"atl") and item.atl:
                     result += ":\n" + __LB_decompile_atl(item.atl,tabs+1)
             __LB_add_string(item.filename,item.linenumber,result,tabs)
@@ -1528,11 +1525,11 @@ init -9001 python:
             if  item.who == None:
                 pass
             elif isinstance(item.who,unicode):
-                result += item.who.encode("utf-8")+" "
+                result += item.who+" "
             what = item.what.replace("\\","\\\\").replace("\n","\\n").replace("\t","\\t").replace("\"","\\\"")
-            result += "\""+what.encode("utf-8")+"\""
+            result += "\""+what+"\""
             if  item.with_:
-                result += " with " + item.with_.encode("utf-8")
+                result += " with " + item.with_
 #TODO item.who_fast - True/False
 #TODO item.interact - True/False
             __LB_add_string(item.filename,item.linenumber,result,tabs)
@@ -1544,7 +1541,7 @@ init -9001 python:
             pass
         
         elif  hasattr(renpy.ast, "UserStatement") and isinstance(item,renpy.ast.UserStatement):
-            result = item.line.encode("utf-8")
+            result = item.line
             __LB_add_string(item.filename,item.linenumber,result,tabs)
 
         else:
@@ -1594,7 +1591,7 @@ init -9001 python:
                                 str = str.replace("\n    ","\n")
                             str = "$ " + str.replace("\n","")
                     try:
-                        out.write(__LB_make_tab(tabs) + str + "\n")
+                        out.write(__LB_make_tab(tabs) + str.encode("utf-8") + "\n")
                     except:
                         renpy.error((fname_print,i,__LB_make_tab(tabs) + str + "\n"))
                     for j in range(1,len(str.split("\n"))):
