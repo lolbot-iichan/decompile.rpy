@@ -49,11 +49,21 @@
 # =============
 # HOW TO USE IT
 # =============
-# There are two ways of using this script
+# There are three ways of using this script
 #
-# -> BEST WAY TO USE (decompiles python block from source)
+# -> BEST WAY TO USE (decompiles python block from source, autopatches "renpy/script.py")
+#    1. Put this file to your /game/ dir.
+#    2. Run the game and get the "RESTART THE GAME AGAIN TO DECOMPILE IT !!!" error message.
+#    3. Run the game again, this time without any error messages.
+#
+# -> IF IT FAILS (decompiles python block from source, but you patch "renpy/script.py")
 #    1. Put this file to your /game/ dir.
 #    2. Delete "i.source = None" line of "renpy/script.py" file
+#    3. Run the game.
+#
+# -> IF IT FAILS TOO (decompiles python block from bytecode, tricky)
+#    1. Put this file to your /game/ dir.
+#    2. Change "__LB_decompile_bytecode = False" line below in this file to "__LB_decompile_bytecode = True"
 #    3. Run the game.
 #
 # Decompiled rpyc will be put at root folder of your game.
@@ -61,7 +71,7 @@
 # ==============
 # MODE SELECTION
 # ==============
-# False -> decompile python blocks from source code (default, but you need to patch "renpy/script.py")
+# False -> decompile python blocks from source code (default, but a patch is needed at "renpy/script.py")
 # True  -> decompile python blocks from bytecode (less stable, avaliable in case renpy/script.py is changed in future)
 python early:
     __LB_decompile_bytecode = False
@@ -137,6 +147,43 @@ init -9001 python:
     __LB_invisible_space = ""
     __LB_files_filtered_out = [re.compile(".*common.00[a-z_]*.rpy.*"),re.compile(".*common._[a-z_/]*.rpym.*"),re.compile(".*decompile.rpy.*"),re.compile(".*injection.rpy.*")]
     __LB_decompiled_files = {}
+    _LB_tried_to_patch_isource = False
+
+    def __LB_patch_isource():
+        import os, datetime
+    
+        global _LB_tried_to_patch_isource
+        if  _LB_tried_to_patch_isource:
+           return True
+    
+        scriptpath = os.path.join(config.renpy_base,"renpy","script.py")
+        if  not os.path.exists(scriptpath):
+            return False
+    
+        script = open(scriptpath, "r")
+        script_lines = script.readlines()
+        script.close()
+        
+        re_isource = re.compile("^ * i.source *= *None *$")
+        for l in script_lines:
+            if  re_isource.match(l):
+                matched = l
+                break
+        else:
+            return False
+    
+        try:
+            os.move(scriptpath, scriptpath+".bak")
+        except:
+            pass
+
+        f = open(scriptpath, "w")
+        for l in script_lines:
+            f.write(l.replace(matched,"#"+matched))
+        f.close()
+    
+        _LB_tried_to_patch_isource = True
+        return True
 
     def __LB_make_tab(tabs):
         return "    "*tabs
@@ -153,7 +200,10 @@ init -9001 python:
         else:
             text = pycode.source
             if  text == None:
-                renpy.error('Empty python source.\n\nNOTE: Make sure, that you\'ve really commented out "i.source = None" line in renpy/script.rpy\n\nIf it does not help, try setting "__LB_decompile_bytecode" flag to False')
+                if  __LB_patch_isource():
+                    renpy.error('Tried to patch "i.source = None" line in renpy/script.rpy. However, you need to restart RenPy manually to make this file reload.\n\n\n\n!!! RESTART THE GAME AGAIN TO DECOMPILE IT !!!\n\n\n\n')
+                else:
+                    renpy.error('Empty python source.\n\nNOTE: Make sure, that you\'ve really commented out "i.source = None" line in renpy/script.rpy\n\nIf it does not help, try setting "__LB_decompile_bytecode" flag to False')
             if  text.startswith("\n"):
                 text = text[1:]
             if  text.endswith("\n"):
