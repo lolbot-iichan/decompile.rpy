@@ -1,10 +1,11 @@
-# RenPy code decompiler 1.2
+# RenPy code decompiler 1.3
 # Decompiles PRYC files from RenPy runtime. Not for a faint of heart.
 
 # 1.1: Update to support renpy 6.15.x Translate/EndTranslate constructs
 # 1.1.1: Unicode fix
 # 1.1.2: atl & with collision fix, 2+ behinds fix
 # 1.2: full atl support
+# 1.3: autopatch of "renpy/script.py" is added
 
 # ========
 # CONTACTS
@@ -145,12 +146,12 @@ python early:
 init -9001 python:
     import re
     __LB_invisible_space = ""
-    __LB_files_filtered_out = [re.compile(".*common.00[a-z_]*.rpy.*"),re.compile(".*common._[a-z_/]*.rpym.*"),re.compile(".*decompile.rpy.*"),re.compile(".*injection.rpy.*")]
+    __LB_files_filtered_out = [re.compile(".*common.00[a-z_]*.rpy.*"),re.compile(".*common._[a-z_/]*.rpym.*"),re.compile(".*decompile.rpy.*"),re.compile(".*depack.rpy.*"),re.compile(".*injection.rpy.*")]
     __LB_decompiled_files = {}
     _LB_tried_to_patch_isource = False
 
     def __LB_patch_isource():
-        import os, datetime
+        import os, shutil
     
         global _LB_tried_to_patch_isource
         if  _LB_tried_to_patch_isource:
@@ -172,10 +173,7 @@ init -9001 python:
         else:
             return False
     
-        try:
-            os.move(scriptpath, scriptpath+".bak")
-        except:
-            pass
+        shutil.copy2(scriptpath, scriptpath+".bak")
 
         f = open(scriptpath, "w")
         for l in script_lines:
