@@ -1,5 +1,6 @@
-﻿# RenPy archive unpacker 1.0
+﻿# RenPy archive unpacker 1.1
 # Decompiles PRA archives from RenPy runtime.
+# Compatible with games using old versions of RenPy 6.x
 
 # =============
 # HOW TO USE IT
@@ -20,6 +21,9 @@ init 65535 python:
     else:
         # for RenPy before 6.11.0
         _LB_list_files = lambda: [fn for dir, fn in renpy.loader.listdirfiles() if dir != renpy.config.commondir]
+
+    # for removing invisible "archived" folder
+    renpy.loader.walkdir = (lambda f: lambda dir: f(dir) if os.path.exists(dir) else [])(renpy.loader.walkdir)
 
     if  hasattr(renpy,"file"):
         _LB_file = renpy.file
