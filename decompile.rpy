@@ -6,6 +6,7 @@
 # 1.1.2: atl & with collision fix, 2+ behinds fix
 # 1.2: full atl support
 # 1.3: autopatch of "renpy/script.py" is added
+# 1.4: screen language 2 is now supported
 
 # ========
 # CONTACTS
@@ -1198,6 +1199,117 @@ init -9001 python:
 
 
 
+# =============================
+# LET'S DECOMPILE SL2 COMMANDS
+# =============================
+
+
+    def __LB_decompile_sl2(sl2,tabs,first_child=0):
+        lbcode_str = ""
+
+#http://www.renpy.org/doc/html/screens.html#screen-statement
+        if  hasattr(renpy.sl2.slast, "SLScreen") and isinstance(sl2,renpy.sl2.slast.SLScreen):
+            if  hasattr(sl2, "modal") and sl2.modal == None and sl2.modal != "False":
+                lbcode_str += __LB_make_tab(tabs+1) + "modal " + sl2.modal + "\n"
+            if  hasattr(sl2, "tag") and sl2.tag != None:
+                lbcode_str += __LB_make_tab(tabs+1) + "tag " + sl2.tag + "\n"
+            if  hasattr(sl2, "zorder") and sl2.zorder != "0":
+                lbcode_str += __LB_make_tab(tabs+1) + "zorder " + sl2.zorder + "\n"
+            if  hasattr(sl2, "variant") and sl2.variant != None and sl2.variant != "None":
+                lbcode_str += __LB_make_tab(tabs+1) + "variant " + `sl2.variant` + "\n"
+
+        if  len(sl2.children) == first_child and len(sl2.keyword) == 0:
+            lbcode_str += __LB_make_tab(tabs) + "pass" + "\n"
+            
+        for k in sl2.keyword:
+            lbcode_str += __LB_make_tab(tabs) + k[0] + " " + k[1] + "\n"
+
+        for item in sl2.children[first_child:]:
+            if  hasattr(renpy.sl2.slast, "SLDisplayable") and isinstance(item,renpy.sl2.slast.SLDisplayable):
+                if  item.displayable.__module__ == "renpy.ui" and item.displayable.__name__[0] == "_":
+                    item_disp = item.displayable.__name__[1:]
+                elif item.displayable.__module__ == "renpy.text.text" and item.displayable.__name__ in ["Text"]:
+                    item_disp = item.displayable.__name__.lower()
+                elif item.displayable.__module__ == "renpy.display.im" and item.displayable.__name__ in ["image"]:
+                    item_disp = item.displayable.__name__.lower()
+                elif item.displayable.__module__ == "renpy.display.motion" and item.displayable.__name__ in ["Transform"]:
+                    item_disp = item.displayable.__name__.lower()
+                elif item.displayable.__module__ == "renpy.display.dragdrop" and item.displayable.__name__ in ["Drag","DragGroup"]:
+                    item_disp = item.displayable.__name__.lower()
+                elif item.displayable.__module__ == "renpy.display.layout" and item.displayable.__name__ in ["Null","Grid","Side"]:
+                    item_disp = item.displayable.__name__.lower()
+                elif item.displayable.__module__ == "renpy.display.layout" and item.displayable.__name__ in ["Window","MultiBox"]:
+                    if  hasattr(item,"style"):
+                        item_disp = item.style
+                    else:
+                        item_disp = item.displayable.__name__.lower()
+                elif item.displayable.__module__ == "renpy.display.behavior" and item.displayable.__name__ in ["Button","Input","Timer","MouseArea"]:
+                    item_disp = item.displayable.__name__.lower()
+                elif item.displayable.__module__ == "renpy.display.behavior" and item.displayable.__name__ in ["OnEvent"]:
+                    item_disp = "on"
+                elif item.displayable.__module__ == "renpy.sl2.sldisplayables" and item.displayable.__name__.startswith("sl2"):
+                    item_disp = item.displayable.__name__[3:]
+                else:
+                    item_disp = "#TODO " + item.displayable.__module__ + "." + item.displayable.__name__
+                lbcode_str += __LB_make_tab(tabs) + item_disp + (" " if len(item.positional) else "") + " ".join(item.positional)
+                if  item.children or item.keyword:
+                    lbcode_str += ":\n" + __LB_decompile_sl2(item,tabs+1)
+                else:
+                    lbcode_str += "\n"
+#http://www.renpy.org/doc/html/screens.html#if
+            elif  hasattr(renpy.sl2.slast, "SLIf") and isinstance(item,renpy.sl2.slast.SLIf):
+                for i, (c, block) in enumerate(item.entries):
+                    if  c != None and i == 0:
+                        lbcode_str += __LB_make_tab(tabs) + "if " + c + ":\n"
+                    if  c != None and i != 0:
+                        lbcode_str += __LB_make_tab(tabs) + "elif " + c + ":\n"
+                    if  c == None and i == 0:
+                        lbcode_str += __LB_make_tab(tabs) + "if True:\n"
+                    if  c == None and i != 0:
+                        lbcode_str += __LB_make_tab(tabs) + "else:\n"
+                    lbcode_str += __LB_decompile_sl2(block,tabs+1)
+#http://www.renpy.org/doc/html/screens.html#for
+            elif  hasattr(renpy.sl2.slast, "SLFor") and isinstance(item,renpy.sl2.slast.SLFor):
+                item_variable = item.variable
+                children_since = 0
+                if  item.variable == "_sl2_i" and isinstance(item.children[0],renpy.sl2.slast.SLPython):
+                    code = __LB_decompile_python(item.children[0].code,0)
+                    if  len(code.split("\n")) == 1 and code.endswith(" = _sl2_i"):
+                        item_variable = code[:-len(" = _sl2_i")]
+                        children_since = 1
+                lbcode_str += __LB_make_tab(tabs) + "for " + item_variable + " in " + item.expression + ":\n"
+                lbcode_str += __LB_decompile_sl2(item,tabs+1,children_since)
+#http://www.renpy.org/doc/html/screens.html#python
+            elif  hasattr(renpy.sl2.slast, "SLPython") and isinstance(item,renpy.sl2.slast.SLPython):
+                if  len(__LB_decompile_python(item.code,0).split("\n")) == 1:
+                    lbcode_str += __LB_make_tab(tabs) + "$ " + __LB_decompile_python(item.code,0) + "\n"
+                else:
+                    lbcode_str += __LB_make_tab(tabs) + "python:\n"
+                    lbcode_str += __LB_decompile_python(item.code,tabs+1) + "\n"
+            else:
+                result = "#TODO sl2 "+`item`
+#
+#                               !~~
+#                           ┌┐┌┐│┌┐┌┐ 
+#                           │└┘└┴┘└┘│                
+#                  ┌┐       └┐     ┌┘       ┌┐       
+#                ┌─┴┴─┐      │     │      ┌─┴┴─┐   
+#                └┬──┬┘      │     │      └┬──┬┘   
+#              ┌──┴──┴──┐    │     │    ┌──┴──┴──┐                           
+#              └─┬────┬─┴────┴─────┴────┴─┬────┬─┘
+#                │    │       ┌─┬─┐       │    │
+#                │    │       │ │ │       │    │
+#            ────┴────┴───────┴─┴─┴───────┴────┴────
+#                       ... in another castle ...
+#
+#                     See "renpy/sl2/slatl.py" for details.
+#        
+                lbcode_str += __LB_make_tab(tabs)+ result + "\n"
+        return lbcode_str
+
+
+
+
 
 
 # ==============================================
@@ -1280,6 +1392,9 @@ init -9001 python:
                     if  len(str) > len(s):
                         __LB_decompiled_files[file][line] = (tabs,str)
                 elif  s.startswith("scene") and str.startswith("scene"):
+                    if  len(str) > len(s):
+                        __LB_decompiled_files[file][line] = (tabs,str)
+                elif  s.startswith("screen") and str.startswith("screen"):
                     if  len(str) > len(s):
                         __LB_decompiled_files[file][line] = (tabs,str)
                 elif  "with " in str:
@@ -1564,7 +1679,13 @@ init -9001 python:
                 name = item.screen.name
             else:
                 name = " ".split(item.screen.name)
-            result = "#TODO screen " + name + ":"
+
+            if  isinstance(item.screen,renpy.sl2.slast.SLScreen):
+#WOOOOOH! SCREEN LANG 2.0 IS AWESOME
+                result = "screen " + name + ":\n"
+                result += __LB_decompile_sl2(item.screen,tabs+1)
+            else:
+                result = "#TODO screen " + name + ":"
 #TODO item.screen.code.bytecode - python bycode for screen         
             __LB_add_string(item.filename,item.linenumber,result,tabs)
 
@@ -1583,8 +1704,13 @@ init -9001 python:
             __LB_add_string(item.filename,item.linenumber,result,tabs)
 
         elif  hasattr(renpy.ast, "Translate") and isinstance(item,renpy.ast.Translate):
-            for it in item.block:
-                __LB_decompile_item(it,tabs)
+            if  item.language is None:
+                for it in item.block:
+                    __LB_decompile_item(it,tabs)
+            else:
+                result = "translation " + item.language + " " + item.identifier + ":\n"
+                for it in item.block:
+                    __LB_decompile_item(it,tabs)
         elif  hasattr(renpy.ast, "EndTranslate") and isinstance(item,renpy.ast.EndTranslate):
             pass
         
