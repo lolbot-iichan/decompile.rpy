@@ -1,4 +1,4 @@
-# RenPy code decompiler 1.3
+# RenPy code decompiler 1.4
 # Decompiles PRYC files from RenPy runtime. Not for a faint of heart.
 
 # 1.1: Update to support renpy 6.15.x Translate/EndTranslate constructs
