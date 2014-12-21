@@ -1209,14 +1209,14 @@ init -9001 python:
 
 #http://www.renpy.org/doc/html/screens.html#screen-statement
         if  hasattr(renpy.sl2.slast, "SLScreen") and isinstance(sl2,renpy.sl2.slast.SLScreen):
-            if  hasattr(sl2, "modal") and sl2.modal == None and sl2.modal != "False":
-                lbcode_str += __LB_make_tab(tabs+1) + "modal " + sl2.modal + "\n"
-            if  hasattr(sl2, "tag") and sl2.tag != None:
-                lbcode_str += __LB_make_tab(tabs+1) + "tag " + sl2.tag + "\n"
-            if  hasattr(sl2, "zorder") and sl2.zorder != "0":
-                lbcode_str += __LB_make_tab(tabs+1) + "zorder " + sl2.zorder + "\n"
-            if  hasattr(sl2, "variant") and sl2.variant != None and sl2.variant != "None":
-                lbcode_str += __LB_make_tab(tabs+1) + "variant " + `sl2.variant` + "\n"
+            if  not "modal" in dict(sl2.keyword) and hasattr(sl2, "modal") and sl2.modal == None and sl2.modal != "False":
+                lbcode_str += __LB_make_tab(tabs) + "modal " + sl2.modal + "\n"
+            if  not "tag" in dict(sl2.keyword) and hasattr(sl2, "tag") and sl2.tag != None:
+                lbcode_str += __LB_make_tab(tabs) + "tag " + sl2.tag + "\n"
+            if  not "zorder" in dict(sl2.keyword) and hasattr(sl2, "zorder") and sl2.zorder != "0":
+                lbcode_str += __LB_make_tab(tabs) + "zorder " + sl2.zorder + "\n"
+            if  not "variant" in dict(sl2.keyword) and hasattr(sl2, "variant") and sl2.variant != None and sl2.variant != "None":
+                lbcode_str += __LB_make_tab(tabs) + "variant " + `sl2.variant` + "\n"
 
         if  len(sl2.children) == first_child and len(sl2.keyword) == 0:
             lbcode_str += __LB_make_tab(tabs) + "pass" + "\n"
@@ -1346,6 +1346,10 @@ init -9001 python:
                     pass
                 elif  s.startswith("init") and str.startswith("define"):
                     __LB_decompiled_files[file][line] = (tabs,str)
+                elif  s.startswith("init") and str.startswith("screen"):
+                    __LB_decompiled_files[file][line] = (tabs,str)
+                elif  str.startswith("init") and s.startswith("screen"):
+                    pass
                 elif  str.startswith("init") and s.startswith("image"):
                     pass
                 elif  s.startswith("init") and str.startswith("image"):
@@ -1395,7 +1399,7 @@ init -9001 python:
                     if  len(str) > len(s):
                         __LB_decompiled_files[file][line] = (tabs,str)
                 elif  s.startswith("screen") and str.startswith("screen"):
-                    if  len(str) > len(s):
+                    if  tabs < t:
                         __LB_decompiled_files[file][line] = (tabs,str)
                 elif  "with " in str:
                     if  "with " in s:
@@ -1411,7 +1415,7 @@ init -9001 python:
                         __LB_decompiled_files[file][line] = (tabs,str+" "+s)
                 else:
                     __LB_decompiled_files[file][line] = (tabs,"#TODO: collision: " + str + " " + s)
-            if  t < tabs:
+            if  t < tabs and not str.startswith("screen"):
                 __LB_decompiled_files[file][line] = (tabs,str)
 
 
