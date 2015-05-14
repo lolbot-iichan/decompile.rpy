@@ -1684,7 +1684,7 @@ init -9001 python:
             else:
                 name = " ".split(item.screen.name)
 
-            if  isinstance(item.screen,renpy.sl2.slast.SLScreen):
+            if  hasattr(renpy, "sl2") and isinstance(item.screen,renpy.sl2.slast.SLScreen):
 #WOOOOOH! SCREEN LANG 2.0 IS AWESOME
                 result = "screen " + name + ":\n"
                 result += __LB_decompile_sl2(item.screen,tabs+1)
