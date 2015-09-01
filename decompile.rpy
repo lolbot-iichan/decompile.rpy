@@ -1289,6 +1289,14 @@ init -9001 python:
                 else:
                     lbcode_str += __LB_make_tab(tabs) + "python:\n"
                     lbcode_str += __LB_decompile_python(item.code,tabs+1) + "\n"
+            elif  hasattr(renpy.sl2.slast, "SLDefault") and isinstance(item,renpy.sl2.slast.SLDefault):
+                lbcode_str += __LB_make_tab(tabs) + "default " + item.variable + " = " + item.expression + "\n"
+            elif  hasattr(renpy.sl2.slast, "SLUse") and isinstance(item,renpy.sl2.slast.SLUse):
+                lbcode_str += __LB_make_tab(tabs) + "use " + item.target + "\n"
+                if  item.args:
+                    lbcode_str += __LB_make_tab(tabs) + "#TODO SL2 use with args\n"
+                if  item.id:
+                    lbcode_str += __LB_make_tab(tabs) + "#TODO SL2 use with id\n"
             else:
                 result = "#TODO sl2 "+`item`
 #
