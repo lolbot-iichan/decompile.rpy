@@ -1222,7 +1222,10 @@ init -9001 python:
             lbcode_str += __LB_make_tab(tabs) + "pass" + "\n"
             
         for k in sl2.keyword:
-            lbcode_str += __LB_make_tab(tabs) + k[0] + " " + k[1] + "\n"
+            if  k[1] is not None:
+                lbcode_str += __LB_make_tab(tabs) + k[0] + " " + k[1] + "\n"
+            else:
+                lbcode_str += __LB_make_tab(tabs) + k[0] + "\n"
 
         for item in sl2.children[first_child:]:
             if  hasattr(renpy.sl2.slast, "SLDisplayable") and isinstance(item,renpy.sl2.slast.SLDisplayable):
