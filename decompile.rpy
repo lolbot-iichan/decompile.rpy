@@ -1,4 +1,4 @@
-# RenPy code decompiler 1.4
+# RenPy code decompiler 1.5
 # Decompiles PRYC files from RenPy runtime. Not for a faint of heart.
 
 # 1.1: Update to support renpy 6.15.x Translate/EndTranslate constructs
@@ -7,6 +7,7 @@
 # 1.2: full atl support
 # 1.3: autopatch of "renpy/script.py" is added
 # 1.4: screen language 2 is now supported
+# 1.5: style, icon and default statements
 
 # ========
 # CONTACTS
@@ -1252,8 +1253,10 @@ init -9001 python:
                     item_disp = "on"
                 elif item.displayable.__module__ == "renpy.sl2.sldisplayables" and item.displayable.__name__.startswith("sl2"):
                     item_disp = item.displayable.__name__[3:]
+                elif item.displayable.__module__ == "store.icon" and item.displayable.__name__ == "Icon":
+                    item_disp = item.displayable.__name__.lower()
                 else:
-                    item_disp = "#TODO " + item.displayable.__module__ + "." + item.displayable.__name__
+                    item_disp = "#TODO item_disp " + item.displayable.__module__ + "." + item.displayable.__name__
                 lbcode_str += __LB_make_tab(tabs) + item_disp + (" " if len(item.positional) else "") + " ".join(item.positional)
                 if  item.children or item.keyword:
                     lbcode_str += ":\n" + __LB_decompile_sl2(item,tabs+1)
@@ -1353,6 +1356,10 @@ init -9001 python:
                 elif  str.startswith("init") and s.startswith("python"):
                     str = str[:-1] + " " + s
                     __LB_decompiled_files[file][line] = (tabs,str)
+                elif  str == "return":
+                    __LB_decompiled_files[file][line] = (t-1 if t else 0,s)
+                elif  s == "return":
+                    __LB_decompiled_files[file][line] = (tabs-1 if tabs else 0,str)
                 elif  str.startswith("init") and s.startswith("define"):
                     pass
                 elif  s.startswith("init") and str.startswith("define"):
@@ -1409,6 +1416,9 @@ init -9001 python:
                 elif  s.startswith("scene") and str.startswith("scene"):
                     if  len(str) > len(s):
                         __LB_decompiled_files[file][line] = (tabs,str)
+                elif  s.startswith("style") and str.startswith("style"):
+                    if  len(str) > len(s):
+                        __LB_decompiled_files[file][line] = (tabs,str)
                 elif  s.startswith("screen") and str.startswith("screen"):
                     if  tabs < t:
                         __LB_decompiled_files[file][line] = (tabs,str)
@@ -1425,7 +1435,7 @@ init -9001 python:
                     else:
                         __LB_decompiled_files[file][line] = (tabs,str+" "+s)
                 else:
-                    __LB_decompiled_files[file][line] = (tabs,"#TODO: collision: " + str + " " + s)
+                    __LB_decompiled_files[file][line] = (tabs,"#TODO: collision: '''" + str + "''' --- '''" + s + "'''")
             if  t < tabs and not str.startswith("screen"):
                 __LB_decompiled_files[file][line] = (tabs,str)
 
@@ -1463,6 +1473,14 @@ init -9001 python:
 #http://www.renpy.org/wiki/renpy/doc/reference/The_Ren'Py_Language#Define_Statement
         elif  hasattr(renpy.ast, "Define") and isinstance(item,renpy.ast.Define):
             result = "define " + item.varname + " = "
+            if  item.code.source:
+                result += item.code.source
+            else:
+                result += __LB_decompile_python(item.code,0,True)
+            __LB_add_string(item.filename,item.linenumber,result,tabs)
+
+        elif  hasattr(renpy.ast, "Default") and isinstance(item,renpy.ast.Default):
+            result = "default " + item.varname + " = "
             if  item.code.source:
                 result += item.code.source
             else:
@@ -1681,7 +1699,7 @@ init -9001 python:
                     result += "as " + tag + " "
                 if  len(behind) > 0:
                     result += "behind " + (", ".join(behind)) + " "
-                if  layer != "master":
+                if  layer and layer != "master":
                     result += "onlayer " + layer + " "
                 if  zorder != 0 and zorder != None:
                     result += "zorder " + zorder + " "
@@ -1702,6 +1720,28 @@ init -9001 python:
             else:
                 result = "#TODO screen " + name + ":"
 #TODO item.screen.code.bytecode - python bycode for screen         
+            __LB_add_string(item.filename,item.linenumber,result,tabs)
+
+        elif  hasattr(renpy.ast, "Style") and isinstance(item,renpy.ast.Style):
+            name = item.style_name
+            parent = item.parent
+
+            result = "style " + name + (" is "+parent if parent else "")
+            if  item.clear or item.properties or item.take:
+                result += ":"
+
+            if  item.delattr:
+                result += "#TODO item.delattr" + `item.delattr`
+            if  item.variant:
+                result += "#TODO item.variant" + `item.variant`
+
+            if  item.clear:
+                result += "\n" + __LB_make_tab(tabs+1) + "clear"
+            for k,v in item.properties.iteritems():
+                result += "\n" + __LB_make_tab(tabs+1) + k + " " + v
+            if  item.take:
+                result += "\n" + __LB_make_tab(tabs+1) + "take " + item.take
+
             __LB_add_string(item.filename,item.linenumber,result,tabs)
 
         elif  hasattr(renpy.ast, "Say") and isinstance(item,renpy.ast.Say):
