@@ -1,4 +1,4 @@
-# RenPy code decompiler 1.5
+# RenPy code decompiler 1.5.1
 # Decompiles PRYC files from RenPy runtime. Not for a faint of heart.
 
 # 1.1: Update to support renpy 6.15.x Translate/EndTranslate constructs
@@ -1295,11 +1295,12 @@ init -9001 python:
             elif  hasattr(renpy.sl2.slast, "SLDefault") and isinstance(item,renpy.sl2.slast.SLDefault):
                 lbcode_str += __LB_make_tab(tabs) + "default " + item.variable + " = " + item.expression + "\n"
             elif  hasattr(renpy.sl2.slast, "SLUse") and isinstance(item,renpy.sl2.slast.SLUse):
-                lbcode_str += __LB_make_tab(tabs) + "use " + item.target + "\n"
+                lbcode_str += __LB_make_tab(tabs) + "use " + item.target
                 if  item.args:
-                    lbcode_str += __LB_make_tab(tabs) + "#TODO SL2 use with args\n"
+                    lbcode_str += __LB_decompile_ArgumentInfo(item.args)
                 if  item.id:
-                    lbcode_str += __LB_make_tab(tabs) + "#TODO SL2 use with id\n"
+                    lbcode_str += " id " + item.id
+                lbcode_str += "\n"
             else:
                 result = "#TODO sl2 "+`item`
 #
@@ -1445,6 +1446,19 @@ init -9001 python:
 # RENPY STATEMENTS LANGUAGE DECOMPILER
 # ====================================
 
+    def __LB_decompile_ArgumentInfo(arguments):
+        result_tmp = ""
+        for (x,val) in arguments.arguments:
+            if  x:
+                result_tmp += ", "+x+"="+val
+            else:
+                result_tmp += ", "+val
+        if  arguments.extrapos:
+            result_tmp += ", *"+arguments.extrapos
+        if  arguments.extrakw:
+            result_tmp += ", **"+arguments.extrakw
+        return " (" + result_tmp[2:] + ")"
+
     def __LB_decompile_item(item,tabs=0):
         result = "#" + repr(item)
 
@@ -1457,17 +1471,7 @@ init -9001 python:
             if  hasattr(item, "arguments") and item.arguments:
                 if  item.expression:
                     result += " pass"
-                result_tmp = ""
-                for (x,val) in item.arguments.arguments:
-                    if  x:
-                        result_tmp += ", "+x+"="+val
-                    else:
-                        result_tmp += ", "+val
-                if item.arguments.extrapos:
-                    result_tmp += ", *"+item.arguments.extrapos
-                if item.arguments.extrakw:
-                    result_tmp += ", **"+item.arguments.extrakw
-                result += " (" + result_tmp[2:] + ")"
+                result += __LB_decompile_ArgumentInfo(item.arguments)
             __LB_add_string(item.filename,item.linenumber,result,tabs)
 
 #http://www.renpy.org/wiki/renpy/doc/reference/The_Ren'Py_Language#Define_Statement
