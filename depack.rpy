@@ -12,6 +12,7 @@
 init 65535 python:
     import os
     import shutil
+    import __builtin__
 
     _LB_GAME_DIR = os.path.join(config.basedir, "game")
     _LB_OUTPUT_DIR = os.path.join(config.basedir, "unpacked", "game")
@@ -38,7 +39,7 @@ init 65535 python:
             dirname = os.path.dirname(new_path)
             if  not os.path.exists(dirname):
                 os.makedirs(dirname)
-            new = open(new_path, "wb")
+            new = __builtin__.open(new_path, "wb")
             orig = _LB_file(fname)
             shutil.copyfileobj(orig, new)
             orig.close()
