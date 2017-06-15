@@ -134,12 +134,13 @@ python early:
 # True  -> verbose behavior
 
 python early:
+    import codecs
     __LB_renpy_error_on_python_fail = False
     __LB_unit_test_only = False
     __LB_condition_debug = False
     __LB_full_debug = False
     __LB_print_dis = False
-    __LB__open = open
+    __LB__open = lambda f,e: codecs.open(f,e,"utf-8")
 
 # ==================
 # HERE GOES THE CODE
@@ -1824,7 +1825,7 @@ init -9001 python:
                                 str = str.replace("\n    ","\n")
                             str = "$ " + str.replace("\n","")
                     try:
-                        out.write(__LB_make_tab(tabs) + str.encode("utf-8") + "\n")
+                        out.write(__LB_make_tab(tabs) + str + "\n")
                     except:
                         renpy.error((fname_print,i,__LB_make_tab(tabs) + str + "\n"))
                     for j in range(1,len(str.split("\n"))):
