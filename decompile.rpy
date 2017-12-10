@@ -148,7 +148,7 @@ python early:
 
 init -9001 python:
     import re
-    __LB_invisible_space = ""
+    __LB_invisible_space = " "
     __LB_files_filtered_out = [re.compile(".*common.00[a-z_]*.rpy.*"),re.compile(".*common._[a-z_/]*.rpym.*"),re.compile(".*decompile.rpy.*"),re.compile(".*depack.rpy.*"),re.compile(".*injection.rpy.*")]
     __LB_decompiled_files = {}
     _LB_tried_to_patch_isource = False
@@ -1709,7 +1709,7 @@ init -9001 python:
                 if  zorder != 0 and zorder != None:
                     result += "zorder " + zorder + " "
                 if  hasattr(item,"atl") and item.atl:
-                    result += ":\n" + __LB_decompile_atl(item.atl,tabs+1)
+                    result = result.rstrip() + ":\n" + __LB_decompile_atl(item.atl,tabs+1)
             __LB_add_string(item.filename,item.linenumber,result,tabs)
 
         elif  hasattr(renpy.ast, "Screen") and isinstance(item,renpy.ast.Screen):
