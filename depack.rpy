@@ -1,4 +1,4 @@
-﻿# RenPy archive unpacker 1.1
+# RenPy archive unpacker 1.2
 # Decompiles PRA archives from RenPy runtime.
 # Compatible with games using old versions of RenPy 6.x
 
@@ -9,7 +9,7 @@
 # 2. Run the game.
 # 3. See /unpacked/ dir.
 
-init 65535 python:
+init -9000 python:
     import os
     import shutil
     import __builtin__
@@ -28,6 +28,8 @@ init 65535 python:
 
     if  hasattr(renpy,"file"):
         _LB_file = renpy.file
+    elif hasattr(renpy,"notl_file"):
+        _LB_file = renpy.notl_file
     else:
         # for RenPy before 6.3.0
         _LB_file = renpy.loader.load
