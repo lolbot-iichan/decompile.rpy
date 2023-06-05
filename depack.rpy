@@ -1,6 +1,6 @@
-# RenPy archive unpacker 1.2
+# RenPy archive unpacker 1.3
 # Decompiles PRA archives from RenPy runtime.
-# Compatible with games using old versions of RenPy 6.x
+# Compatible with games using versions of RenPy 6.x, 7.x and 8.x
 
 # =============
 # HOW TO USE IT
@@ -12,7 +12,6 @@
 init -9000 python:
     import os
     import shutil
-    import __builtin__
 
     _LB_GAME_DIR = os.path.join(config.basedir, "game")
     _LB_OUTPUT_DIR = os.path.join(config.basedir, "unpacked", "game")
@@ -34,6 +33,12 @@ init -9000 python:
         # for RenPy before 6.3.0
         _LB_file = renpy.loader.load
 
+    try:
+        import __builtin__
+        _LB_open = __builtin__.open
+    except:
+        _LB_open = renpy.compat.open
+
     for fname in _LB_list_files():
         old_path = os.path.join(_LB_GAME_DIR, fname)
         new_path = os.path.join(_LB_OUTPUT_DIR, fname)
@@ -41,7 +46,7 @@ init -9000 python:
             dirname = os.path.dirname(new_path)
             if  not os.path.exists(dirname):
                 os.makedirs(dirname)
-            new = __builtin__.open(new_path, "wb")
+            new = _LB_open(new_path, "wb")
             orig = _LB_file(fname)
             shutil.copyfileobj(orig, new)
             orig.close()
